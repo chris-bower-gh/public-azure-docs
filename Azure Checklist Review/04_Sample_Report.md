@@ -68,7 +68,7 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 | # | Checklist Item | Status | Evidence | Impact | Recommendation | Priority | Effort |
 |---|---|---|---|---|---|---|---|
 | CO1 | Budget alerts configured per subscription | Non-Compliant | No Cost Management budgets found | Cost overruns will not be detected proactively | Create monthly budgets with 80% and 100% alerts for each subscription | Critical | S |
-| CO2 | Right-sizing review for underutilised VMs | Non-Compliant | Azure Advisor shows 3 VMs at <5% CPU utilisation over 30 days | Unnecessary spend | Review and resize or deallocate | High | S |
+| CO2 | Right-sizing review for underutilised VMs | Non-Compliant | Azure Advisor shows 3 VMs at <5% CPU utilisation over 30 days — see Utilisation Data Extracts appendix for per-VM metrics | Unnecessary spend | Review and resize or deallocate; validate against scheduled workloads before actioning | High | S |
 | CO3 | Reserved Instances or Savings Plans in use | Not Applicable | Workloads are all PaaS — no IaaS VMs committed long-term | — | Consider App Service Premium reservations if plans remain stable | Medium | S |
 | CO4 | Dev/test subscriptions on Dev/Test pricing | Non-Compliant | 1 Dev subscription billed at production rates | Overpaying for dev workloads | Convert to Dev/Test offer | Medium | S |
 
@@ -137,6 +137,76 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 - `checklist_graph.sh` — AKS, App Service, SQL DB modules
 - Azure Cost Management (Portal)
 - Azure Advisor (Portal)
+- Phase 2 Inventory scripts (`Scripts/Phase2_Inventory/`) — KQL + PowerShell
+- Phase 3 Utilisation scripts (`Scripts/Phase3_Utilisation/`) — PowerShell
+
+---
+
+### How Audit Data is Collected
+
+Findings in this report were produced using manual checklist review, portal inspection, and — where supplementary evidence was needed — script-based inventory and utilisation data collection. There is no automated pipeline: data flows from scripts into the report through manual curation by the assessor.
+
+| Step | Method |
+|---|---|
+| KQL queries (`Scripts/Phase2_Inventory/*.kql`) | Paste into Azure Resource Graph Explorer → run → click **Download results** to export CSV |
+| PowerShell inventory scripts (`Scripts/Phase2_Inventory/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
+| PowerShell utilisation scripts (`Scripts/Phase3_Utilisation/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
+| Report integration | Assessor opens CSVs, identifies rows relevant to findings, and pastes sample rows as evidence tables in this appendix |
+
+---
+
+### Inventory Data Extracts
+
+The tables below are sample extracts from Phase 2 inventory scripts. Full output CSVs are retained in the `.\output\` folder.
+
+**Virtual Machines** (`Scripts/Phase2_Inventory/02-virtual-machines.kql`)
+
+| Name | Size | PowerState | ResourceGroup | Subscription |
+|---|---|---|---|---|
+| vm-contoso-sql-01 | Standard_D4s_v3 | running | rg-data-prod | sub-contoso-prod-001 |
+| vm-contoso-jump-01 | Standard_B2s | running | rg-mgmt | sub-contoso-prod-002 |
+| vm-contoso-legacy-01 | Standard_D2s_v3 | running | rg-legacy | sub-contoso-prod-001 |
+| vm-contoso-build-01 | Standard_D2s_v3 | deallocated | rg-dev | sub-contoso-dev-001 |
+
+**App Service Plans** (`Scripts/Phase2_Inventory/04-app-service-plans.kql`)
+
+| Name | SKU | OS | AppCount | WorkerCount | Subscription |
+|---|---|---|---|---|---|
+| asp-contoso-prod | P2v3 | Windows | 5 | 1 | sub-contoso-prod-001 |
+| asp-contoso-prod-2 | P1v3 | Windows | 3 | 1 | sub-contoso-prod-001 |
+| asp-contoso-dev | B2 | Windows | 1 | 1 | sub-contoso-dev-001 |
+
+*Note: asp-contoso-dev is a Basic tier plan — Always On is not available on this tier. Finding AS2 identifies 3 apps on Basic tier plans.*
+
+---
+
+### Utilisation Data Extracts
+
+The tables below are sample extracts from Phase 3 utilisation scripts. Full output CSVs are retained in the `.\output\` folder. Metrics cover a 30-day look-back period.
+
+**VM CPU and Memory Utilisation** (`Scripts/Phase3_Utilisation/02-vm-metrics.ps1`)
+
+| Name | Metric | AvgPct | MaxPct | Subscription |
+|---|---|---|---|---|
+| vm-contoso-sql-01 | Percentage CPU | 2.1 | 8.4 | sub-contoso-prod-001 |
+| vm-contoso-sql-01 | Available Memory % | 89.2 | 92.1 | sub-contoso-prod-001 |
+| vm-contoso-jump-01 | Percentage CPU | 0.8 | 3.2 | sub-contoso-prod-002 |
+| vm-contoso-jump-01 | Available Memory % | 78.4 | 83.1 | sub-contoso-prod-002 |
+| vm-contoso-legacy-01 | Percentage CPU | 3.4 | 11.7 | sub-contoso-prod-001 |
+| vm-contoso-legacy-01 | Available Memory % | 82.6 | 88.0 | sub-contoso-prod-001 |
+
+*All three production VMs show sustained CPU below 5% — consistent with the Azure Advisor finding CO2. Resize or deallocation should be validated against scheduled workloads before actioning.*
+
+**App Service Plan Utilisation** (`Scripts/Phase3_Utilisation/04-app-service-metrics.ps1`)
+
+| Plan | Metric | AvgPct | MaxPct | Subscription |
+|---|---|---|---|---|
+| asp-contoso-prod | CpuPercentage | 4.2 | 18.6 | sub-contoso-prod-001 |
+| asp-contoso-prod | MemoryPercentage | 67.3 | 81.4 | sub-contoso-prod-001 |
+| asp-contoso-prod-2 | CpuPercentage | 1.8 | 9.4 | sub-contoso-prod-001 |
+| asp-contoso-prod-2 | MemoryPercentage | 38.1 | 52.7 | sub-contoso-prod-001 |
+
+*asp-contoso-prod shows low CPU but elevated average memory (67%). Memory pressure — rather than CPU — may be the relevant trigger for autoscale rules (see finding AS5).*
 
 ---
 
