@@ -61,6 +61,20 @@ This document maps reusable audit scripts to the review modules. A complete asse
 
 ---
 
+### M365 Security Audit (Optional Add-on)
+- Customer operates M365 and wants security baseline assessment alongside Azure review
+- Can be run independently of Azure assessment or combined for holistic tenant review
+- Time allows for 1–2 additional days for M365 tenant assessment
+
+**Scope:** Entra ID, Exchange Online, Teams, SharePoint, Power Platform security posture against CISA SCuBA baselines  
+**Tool:** [ScubaGear](https://github.com/cisagov/ScubaGear) — automated M365 compliance assessment  
+**Effort:** 1–2 days (can run in parallel with Azure assessment)  
+**Output:** M365 security compliance report (HTML + CSV) mapped to NIST SP 800-53 + MITRE ATT&CK
+
+See **M365 Security Assessment** section below for setup and usage.
+
+---
+
 ## Available Audit Scripts
 
 Reusable data collection scripts are located in the repo at `scripts/phase2-inventory/` and `scripts/phase3-utilisation/`. You can copy these to a separate location for use in reviews (not tied to the FinOps engagement process).
@@ -292,6 +306,49 @@ This table shows which audit scripts provide data for each review module. Script
 | `virtual-wan-hub-traffic.ps1` | 30-day total data processed per hub | Validates hub utilisation; flags unused hubs |
 
 #### Azure Bastion Module
+| Inventory Script | What it collects | How it supports checklist |
+|---|---|---|
+| `17-bastion.kql` | Bastion hosts, SKU tier, deployment method | Audit for Azure Bastion presence and tier alignment |
+
+---
+
+## M365 Security Assessment
+
+### Overview
+
+For customers with M365 workloads, **ScubaGear** provides automated security baseline assessment and can complement your Azure checklist review. ScubaGear queries M365 APIs, evaluates security configuration against **CISA SCuBA baselines**, and produces compliance reports (HTML, CSV, JSON).
+
+**Key features:**
+- Assessments against NIST SP 800-53 and MITRE ATT&CK mapped controls
+- Support for Entra ID, Exchange Online, Teams, SharePoint, Power Platform, Security Suite
+- Automated policy evaluation using Open Policy Agent (OPA)
+- Risk acceptance workflows via YAML configuration
+- Output: Interactive HTML report + structured CSV for manual curation into review findings
+
+### ScubaGear Setup & Usage
+
+See `Scripts/M365_Security/README.md` for:
+- Installation and prerequisites
+- Quick-start PowerShell commands
+- YAML configuration template
+- How to interpret and integrate M365 findings into your review report
+
+### When to Include M365 Assessment
+
+| Scenario | Include M365? |
+|---|---|
+| Azure-only infrastructure, no M365 | No — out of scope |
+| M365 tenant but low security priority | Optional — note in report as deferred |
+| Holistic tenant security review | Yes — run in parallel with Azure assessment for comprehensive findings |
+| Compliance/audit engagement (e.g., BOD 25-01) | Yes — required if M365 in scope |
+
+### Output Integration
+
+M365 findings follow the same manual curation pattern as Azure data:
+1. Run ScubaGear → generates HTML report + CSV results
+2. Open report, filter for non-compliant controls
+3. Extract relevant evidence rows → paste into your review findings
+4. Cross-reference to NIST 800-53 / MITRE ATT&CK in appendix
 | Inventory Script | What it collects | How it supports checklist |
 |---|---|---|
 | `17-bastion.kql` | SKU tier (Developer/Basic/Standard) | Tier validation against access and scale checklist items |

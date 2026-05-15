@@ -3,7 +3,7 @@
 **Customer:** Contoso Ltd  
 **Assessment Date:** May 2026  
 **Prepared By:** [Assessor Name]  
-**Modules in Scope:** Core, Landing Zone, Cost Optimization, App Service, Azure SQL DB  
+**Modules in Scope:** Core, Landing Zone, Cost Optimization, App Service, Azure SQL DB, M365 Security  
 
 ---
 
@@ -15,14 +15,14 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 
 | Priority | Count |
 |---|---|
-| Critical | 2 |
-| High | 5 |
-| Medium / Low | 8 |
+| Critical | 3 |
+| High | 6 |
+| Medium / Low | 9 |
 
 **Top 3 recommendations:**
-1. Enable diagnostic settings on all App Service apps — currently missing on 6 of 9 apps.
+1. Enable MFA on all user accounts (M365) — currently 47 of 312 users have MFA disabled; critical identity risk.
 2. Implement Resource Group tagging policy — cost allocation is not possible without consistent tagging.
-3. Review Azure SQL DB backup retention — 4 databases are set to 7-day retention with no long-term backup policy.
+3. Enable diagnostic settings on all App Service apps — currently missing on 6 of 9 apps.
 
 ---
 
@@ -35,6 +35,7 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 | Cost Optimization | Assessed | Customer flagged cost overruns in last quarter |
 | App Service | Assessed | 9 production App Service apps in scope |
 | Azure SQL DB | Assessed | 4 Azure SQL Databases in scope |
+| M365 Security | Assessed | M365 tenant in scope; included for security baseline (CISA SCuBA) |
 | AKS | Not Applicable | No AKS resources found |
 | API Management | Deferred | APIM migration planned Q3 2026 |
 
@@ -97,13 +98,27 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 
 ---
 
+### M365 Security Module
+
+| # | SCuBA Baseline Control | Status | Evidence | Impact | Recommendation | Priority | Effort |
+|---|---|---|---|---|---|---|---|
+| M365-1 | Require MFA for all users | Non-Compliant | ScubaGear: 47 of 312 users (15%) have MFA disabled; includes 8 privileged accounts | Credential compromise risk; privileged account takeover | Enable MFA on all user accounts; use Conditional Access to enforce for admin roles first | Critical | S |
+| M365-2 | Prevent external sharing of sensitive data | Partial | SharePoint: external sharing enabled; Teams: guest access not restricted to approved domains | Over-sharing risk; data exfiltration | Restrict SharePoint external sharing to approved domains only; audit Teams guest policies | High | M |
+| M365-3 | Enable advanced threat protection | Non-Compliant | Defender for Office 365 not enabled on any mailbox | No email threat detection | Enable Defender for Office 365 on all Exchange Online mailboxes | High | S |
+| M365-4 | Audit logging enabled | Compliant | Unified Audit Log enabled; retention policy set to 90 days | — | No action | — | — |
+| M365-5 | Enforce strong password policy | Non-Compliant | No custom password policy configured; using Azure AD default (12-char minimum) | Weak password enforcement | Configure custom password policy: 14+ characters, complexity requirements | Medium | S |
+
+*Source: CISA SCuBA assessment via ScubaGear; controls mapped to [NIST 800-53 Revision 5](https://csrc.nist.gov/publications/detail/sp/800-53/rev-5) in Appendix.*
+
+---
+
 ## 4. Excluded Modules
 
 | Module | Reason |
 |---|---|
+| Identity (Entra ID deep-dive) | High-level Entra ID security baseline covered by M365 Security module; additional identity governance assessment can be deferred |
 | AKS | No AKS resources found in scope |
 | AVD | Not in use |
-| Identity | Entra ID governance out of scope for this engagement |
 | API Management | Deferred — APIM migration planned Q3 2026; recommend scheduling a focused review post-migration |
 
 ---
@@ -112,11 +127,13 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 
 | Priority | Action | Owner | Timescale |
 |---|---|---|---|
+| Critical | Enable MFA on all user accounts — particularly 8 privileged admin accounts (M365-1) | Customer Identity / Security Team | 1 week |
 | Critical | Deploy tagging policy and remediate existing resources | Customer Platform Team | 2–4 weeks |
 | Critical | Create Cost Management budgets for all subscriptions | Customer FinOps / Finance | 1 week |
 | High | Create Management Group hierarchy and assign policies | Customer Platform Team | 4–6 weeks |
 | High | Enable diagnostic settings on all App Service apps | Customer App Team | 1 week |
 | High | Enable Defender for SQL and extend backup retention | Customer App Team | 1 week |
+| High | Enable Defender for Office 365 on all mailboxes (M365-3) | Customer Identity / Security Team | 1 week |
 
 ---
 
@@ -139,19 +156,21 @@ An Azure environment review was conducted across 3 subscriptions for Contoso Ltd
 - Azure Advisor (Portal)
 - Phase 2 Inventory scripts (`Scripts/Phase2_Inventory/`) — KQL + PowerShell
 - Phase 3 Utilisation scripts (`Scripts/Phase3_Utilisation/`) — PowerShell
+- **ScubaGear** (Microsoft 365 security baseline assessment) — M365 Security module
 
 ---
 
 ### How Audit Data is Collected
 
-Findings in this report were produced using manual checklist review, portal inspection, and — where supplementary evidence was needed — script-based inventory and utilisation data collection. There is no automated pipeline: data flows from scripts into the report through manual curation by the assessor.
+Findings in this report were produced using manual checklist review, portal inspection, and — where supplementary evidence was needed — script-based inventory and utilisation data collection, plus automated M365 security assessment. There is no automated pipeline for Azure data; M365 data flows from ScubaGear assessment into the report through manual curation by the assessor.
 
 | Step | Method |
 |---|---|
-| KQL queries (`Scripts/Phase2_Inventory/*.kql`) | Paste into Azure Resource Graph Explorer → run → click **Download results** to export CSV |
-| PowerShell inventory scripts (`Scripts/Phase2_Inventory/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
-| PowerShell utilisation scripts (`Scripts/Phase3_Utilisation/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
-| Report integration | Assessor opens CSVs, identifies rows relevant to findings, and pastes sample rows as evidence tables in this appendix |
+| Azure KQL queries (`Scripts/Phase2_Inventory/*.kql`) | Paste into Azure Resource Graph Explorer → run → click **Download results** to export CSV |
+| Azure PowerShell inventory scripts (`Scripts/Phase2_Inventory/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
+| Azure PowerShell utilisation scripts (`Scripts/Phase3_Utilisation/*.ps1`) | Run in authenticated PowerShell session → CSVs written to `.\output\` folder |
+| M365 security assessment (ScubaGear) | `Invoke-SCuBA` with YAML config → generates HTML report + JSON/CSV results |
+| Report integration | Assessor opens all results/outputs, identifies rows relevant to findings, and pastes sample rows as evidence tables in this appendix |
 
 ---
 
@@ -207,6 +226,37 @@ The tables below are sample extracts from Phase 3 utilisation scripts. Full outp
 | asp-contoso-prod-2 | MemoryPercentage | 38.1 | 52.7 | sub-contoso-prod-001 |
 
 *asp-contoso-prod shows low CPU but elevated average memory (67%). Memory pressure — rather than CPU — may be the relevant trigger for autoscale rules (see finding AS5).*
+
+---
+
+### M365 Security Assessment (ScubaGear)
+
+**Assessment Details**
+
+| Attribute | Value |
+|---|---|
+| Assessment Tool | ScubaGear v1.8.0 (CISA) |
+| Baseline Framework | Secure Cloud Business Applications (SCuBA) v2.0 |
+| M365 Products Assessed | Entra ID, Exchange Online, Teams, SharePoint, Security Suite |
+| Assessment Date | May 15, 2026 |
+| Audit Log | See `ScubaResults.json` (full control evaluation details) |
+| Control Mapping | NIST 800-53 Revision 5; MITRE ATT&CK Framework |
+
+**Compliance Summary**
+
+| Status | Count |
+|---|---|
+| Compliant | 1 |
+| Non-Compliant | 3 |
+| Partial | 1 |
+
+**Key Findings**
+
+- **M365-1 (MFA):** 47 users without MFA; 8 are privileged accounts — immediate remediation required
+- **M365-3 (Defender for Office 365):** No threat protection on mailboxes — enables email-based attacks
+- **M365-5 (Password Policy):** Using default weak policy; no custom enforcement
+
+See M365 Security Module findings (above) for full control details and recommendations.
 
 ---
 
