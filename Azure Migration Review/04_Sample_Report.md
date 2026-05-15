@@ -237,24 +237,24 @@ As the organisation already has a tenant, we have reviewed the current state of 
 
 | Subscription Name | Description |
 |---|---|
-| az-pls-management | bc8393ba-9d71-4fda-bb65-e47a1cc765bd |
-| PLS-AZ-STORAGE-SUB | 6f85c9bb-7d32-4cb7-ae08-195e1e19f9d0 |
-| Property Legal - az-pls-connectivity | 0a7bbd89-bdfc-4d8c-8bf1-f14862794473 |
-| Property Legal - az-pls-ilz | 46fa80fe-0984-4843-9953-2c79a9a6f675 |
-| Property Legal - az-pls-infrastructure | e38deb84-2715-4337-9c99-516ac4f9b523 |
+| az-cus-management | bc8393ba-9d71-4fda-bb65-e47a1cc765bd |
+| CUS-AZ-STORAGE-SUB | 6f85c9bb-7d32-4cb7-ae08-195e1e19f9d0 |
+| Customer Name - az-cus-connectivity | 0a7bbd89-bdfc-4d8c-8bf1-f14862794473 |
+| Customer Name - az-cus-ilz | 46fa80fe-0984-4843-9953-2c79a9a6f675 |
+| Customer Name - az-cus-infrastructure | e38deb84-2715-4337-9c99-516ac4f9b523 |
 
 ### Resources
 
 | Name | Type | Resource Group | Location |
 |---|---|---|---|
-| coolgenpurpv2proarchive | Storage account | PLS-STOR-PROCLAIM-ARCHIVE | UK South |
+| coolgenpurpv2proarchive | Storage account | CUS-STOR-PROCLAIM-ARCHIVE | UK South |
 | csb1003000097c70016 | Storage account | cloud-shell-storage-westeurope | West Europe |
 | d22b5bad-7391-4b44-adc3-68931845e522 | Azure Workbook | man-loga-rg | UK South |
 | man-la-iitc | Log Analytics workspace | man-loga-rg | UK South |
 | man-loga-sentinel | Log Analytics workspace | man-loga-rg | UK South |
 | man-vnt-1-28 | Virtual network | man-network-rg | UK South |
 | NetworkWatcher_uksouth | Network Watcher | NetworkWatcherRG | UK South |
-| filesync-archive-01 | Storage Sync Service | PLS-STOR-PROCLAIM-ARCHIVE | UK South |
+| filesync-archive-01 | Storage Sync Service | CUS-STOR-PROCLAIM-ARCHIVE | UK South |
 | SecurityInsights(man-loga-sentinel) | Solution | man-loga-rg | UK South |
 
 # Proposed Solution
@@ -318,7 +318,7 @@ The below diagram illustrates at a high level an example of the above with an ap
 
 
 
-This move to App Services away from traditional IIS brings with it a extensive array of benefits, the key ones for PLS in this case are:
+This move to App Services away from traditional IIS brings with it a extensive array of benefits, the key ones for CUS in this case are:
 
 - Built\-in DevOps support with native CI/CD integration
 - No server maintenance required, no patching, no IIS configs, no OS\-level security management
@@ -367,7 +367,7 @@ These workloads are either too sensitive to latency \(e\.g\. Progress DB\) or no
 
 This section outlines the changes required to support a modern development workflow within Example Client\. The current development approach is based on local environments with limited use of Git or version control practices\. This restricts collaboration, slows down release cycles and increases the risk of inconsistency across environments\.
 
-To align with PLS’s platform modernisation goals, a new development operating model will be introduced using Azure DevOps\. This change will provide the development team with powerful, scalable tools and processes that support secure, repeatable delivery, enabling faster innovation and tighter integration between infrastructure, applications and product development\.
+To align with CUS’s platform modernisation goals, a new development operating model will be introduced using Azure DevOps\. This change will provide the development team with powerful, scalable tools and processes that support secure, repeatable delivery, enabling faster innovation and tighter integration between infrastructure, applications and product development\.
 
 - Centralised source control using Git\-based repositories in Azure DevOps
 - Build pipelines for continuous integration and code validation
@@ -465,10 +465,8 @@ Backlog of adoption activities, from landing zone design and AVD architecture to
 - Cloud Adoption Strategy Evaluator \(CASE\):
 
 Structured analysis across 5 readiness pillars, motivation, outcome clarity, technical readiness, risk posture, and financial planning\.
-
-[A2 \- v1\.0 \- Microsoft Cloud Adoption Plan \- Example Client \- SAMPLE-ENG-0001\.docx](https://synextra-my.sharepoint.com/personal/elliott_leighton-woodruff_synextra_co_uk/Documents/Documents/Customers/PLS/1%20-%20Presales/SAMPLE-ENG-0001%20-%20Launchpad/Output/A2%20-%20v1.0%20-%20Microsoft%20Cloud%20Adoption%20Plan%20-%20PLS%20Solicitors%20-%20SAMPLE-ENG-0001.docx)  
   
-This document serves as the foundation for PLS's cloud transformation, aligning business goals with technical execution\. It enables controlled, insight\-driven adoption of Azure with clear milestones, stakeholder ownership, and measurable outcomes\.
+This document serves as the foundation for CUS's cloud transformation, aligning business goals with technical execution\. It enables controlled, insight\-driven adoption of Azure with clear milestones, stakeholder ownership, and measurable outcomes\.
 
 # Estimated Monthly Cost Projection
 
